@@ -1,6 +1,6 @@
 {
   "name": "@smartsoft001/utils",
-  "version": "2.68.0",
+  "version": "2.69.0",
   "dependencies": {
     "guid-typescript": "^1.0.9",
     "md5": "^2.3.0",
