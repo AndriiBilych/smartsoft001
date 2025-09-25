@@ -54,29 +54,39 @@ interface CrudStore<T> extends CrudState<T> {
   delete(id: string): void;
 }
 
-export function createCrudFeatureStore<T extends IEntity<string>>() {
+// Base computed selectors
+export function withCrudComputed() {
+  return withComputed((store: any) => ({
+    getError: computed(() => (store.error ? store.error() : null)),
+    getLoaded: computed(() => store.loaded()),
+    getSelected: computed(() =>
+      store.selected ? store.selected() : undefined,
+    ),
+    getMultiSelected: computed(() =>
+      store.multiSelected ? store.multiSelected() : undefined,
+    ),
+    getList: computed(() => (store.list ? store.list() : undefined)),
+    getTotalCount: computed(() =>
+      store.totalCount ? store.totalCount() : undefined,
+    ),
+    getLinks: computed(() => (store.links ? store.links() : undefined)),
+    getFilter: computed(() => (store.filter ? store.filter() : undefined)),
+  }));
+}
+
+// Base CRUD methods
+export function withCrudMethods<T extends IEntity<string>>() {
+  return withMethods(CrudMethodsFactory<T>());
+}
+
+export function createCrudFeatureStore<
+  T extends IEntity<string>,
+>(): CrudStore<T> {
   return signalStore(
     { providedIn: 'root' },
     withState<CrudState<T>>(initialState),
-    withComputed((store) => {
-      return {
-        getError: computed(() => (store.error ? store.error() : null)),
-        getLoaded: computed(() => store.loaded()),
-        getSelected: computed(() =>
-          store.selected ? store.selected() : undefined,
-        ),
-        getMultiSelected: computed(() =>
-          store.multiSelected ? store.multiSelected() : undefined,
-        ),
-        getList: computed(() => (store.list ? store.list() : undefined)),
-        getTotalCount: computed(() =>
-          store.totalCount ? store.totalCount() : undefined,
-        ),
-        getLinks: computed(() => (store.links ? store.links() : undefined)),
-        getFilter: computed(() => (store.filter ? store.filter() : undefined)),
-      };
-    }),
-    withMethods(CrudMethodsFactory<T>()),
+    withCrudComputed(),
+    withCrudMethods<T>(),
   ) as unknown as CrudStore<T>;
 }
 
