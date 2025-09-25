@@ -66,7 +66,9 @@ export class DetailsPage<T extends IEntity<string>> implements OnInit {
         handler: () => {
           computed(() => {
             const item = this.detailsOptions.item();
-            this.detailsOptions?.removeHandler?.(item);
+            if (item) {
+              this.detailsOptions?.removeHandler?.(item);
+            }
             this.modalService.dismiss();
           });
         },
@@ -79,7 +81,9 @@ export class DetailsPage<T extends IEntity<string>> implements OnInit {
         handler: () => {
           computed(() => {
             const item = this.detailsOptions.item();
-            this.detailsOptions?.removeHandler?.(item);
+            if (item) {
+              this.detailsOptions?.removeHandler?.(item);
+            }
             this.modalService.dismiss();
           });
         },

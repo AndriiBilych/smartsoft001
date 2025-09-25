@@ -110,7 +110,7 @@ export class ItemComponent<T extends IEntity<string>>
   id!: string;
   formValue!: T;
   formValid = false;
-  item!: T;
+  item: T | undefined;
   formPartialValue!: Partial<T>;
   uniqueProvider!: WritableSignal<
     (values: Record<keyof T, any>) => Promise<boolean>
@@ -124,7 +124,7 @@ export class ItemComponent<T extends IEntity<string>>
     return this._mode();
   }
 
-  selected: Signal<T>;
+  selected: Signal<T | undefined>;
 
   standardComponents = viewChildren(ItemStandardComponent);
   // @ViewChild(IonContent, { static: true }) content: IonContent; //TODO: rewrite when rewriting ionic

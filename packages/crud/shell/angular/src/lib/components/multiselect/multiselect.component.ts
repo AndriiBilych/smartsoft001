@@ -75,7 +75,7 @@ export class MultiselectComponent<T extends IEntity<string>> {
       this.showForm = !!fieldsWithOptions.length;
 
       fieldsWithOptions.forEach(({ key }) => {
-        const uniques = _.uniq(list.map((i) => i[key]));
+        const uniques = _.uniq(list.map((i: { [key: string]: any }) => i[key]));
 
         if (uniques.length === 1) {
           model[key] = uniques[0];

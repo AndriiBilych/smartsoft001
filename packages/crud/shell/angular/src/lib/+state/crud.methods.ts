@@ -1,19 +1,72 @@
 import { inject } from '@angular/core';
-import { patchState } from '@ngrx/signals';
+import {
+  patchState,
+  SignalStoreFeatureResult,
+  StateSignals,
+  WritableStateSource,
+} from '@ngrx/signals';
 
 import { PaginationMode } from '@smartsoft001/angular';
 import { IEntity } from '@smartsoft001/domain-core';
 
 import { ICrudCreateManyOptions, ICrudFilter } from '../models';
-import { initialState } from './crud.store';
+import { CrudState, initialState } from './crud.store';
 import { CrudService } from '../services/crud/crud.service';
 
-// "Actions, Reducers, Effects" in a normal store
-export function CrudMethodsFactory<T extends IEntity<string>>() {
-  return (store: any, crudService = inject(CrudService<T>)) => {
-    const methods = {
+type CrudMethods<T> = {
+  create: (item: T) => Promise<void>;
+  createSuccess: () => Promise<void>;
+  createMany: (data: {
+    items: T[];
+    options: ICrudCreateManyOptions;
+  }) => Promise<void>;
+  createManySuccess: () => Promise<void>;
+  export: (filter: ICrudFilter, format: any) => Promise<void>;
+  exportSuccess: () => void;
+  read: (filter?: ICrudFilter) => Promise<void>;
+  readSuccess: (data: {
+    list: T[];
+    filter?: ICrudFilter;
+    totalCount?: number;
+    links?: any;
+  }) => void;
+  clear: () => void;
+  select: (id: string) => Promise<void>;
+  selectSuccess: (selected: T) => void;
+  unselect: () => void;
+  multiSelect: (items: Array<T>) => void;
+  update: (item: Partial<T> & { id: string }) => Promise<void>;
+  updateSuccess: (id: string) => Promise<void>;
+  updatePartial: (item: Partial<T> & { id: string }) => Promise<void>;
+  updatePartialSuccess: (id: string) => Promise<void>;
+  updatePartialMany: (
+    items: Array<Partial<T> & { id: string }>,
+  ) => Promise<void>;
+  updatePartialManySuccess: () => Promise<void>;
+  delete: (id: string) => Promise<void>;
+  deleteSuccess: () => Promise<void>;
+  defaultFailure: (error: string) => void;
+};
+
+export function crudMethodsFactory<
+  T extends IEntity<string>,
+  Input extends SignalStoreFeatureResult & {
+    state: CrudState<T>;
+  },
+>() {
+  return (
+    store: StateSignals<Input['state']> &
+      Input['props'] &
+      Input['methods'] &
+      WritableStateSource<Input['state']>,
+    crudService = inject(CrudService<T>),
+  ) => {
+    // Cast store to the WritableStateSource with TodosState for patchState operations (necessary work-around caused by very complex withMethods function's store parameter)
+    const writableStore = store as WritableStateSource<CrudState<T>>;
+
+    const methods: CrudMethods<T> = {
       async create(item: T) {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: false,
           error: null,
         });
@@ -27,18 +80,18 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
       },
 
       async createSuccess() {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: true,
           error: null,
         });
 
         await methods.read(
-          store.filter ? { ...store.filter, offset: 0 } : null,
+          store.filter ? { ...store.filter, offset: 0 } : undefined,
         );
       },
 
       async createMany(data: { items: T[]; options: ICrudCreateManyOptions }) {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: false,
           error: null,
         });
@@ -52,18 +105,16 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
       },
 
       async createManySuccess() {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: true,
           error: null,
         });
 
-        await methods.read(
-          store.filter ? { ...store.filter, offset: 0 } : null,
-        );
+        methods.read(store.filter ? { ...store.filter, offset: 0 } : undefined);
       },
 
       async export(filter: ICrudFilter, format: any) {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: false,
         });
 
@@ -76,23 +127,23 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
       },
 
       exportSuccess() {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: true,
         });
       },
 
-      async read(filter: ICrudFilter) {
-        patchState(store, {
+      async read(filter?: ICrudFilter) {
+        patchState(writableStore, {
           loaded: false,
           filter,
           error: null,
-          totalCount: null,
+          totalCount: undefined,
           links: null,
         });
 
         try {
           const result = await crudService.getList<T>(filter);
-          methods.readSuccess<T>({
+          methods.readSuccess({
             list: result.data,
             filter,
             totalCount: result.totalCount,
@@ -113,7 +164,7 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
 
         if (
           data.filter?.offset &&
-          store.list() &&
+          store.list?.() &&
           data.filter.paginationMode !== PaginationMode.singlePage
         ) {
           list = [...store.list(), ...data.list];
@@ -121,7 +172,7 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
           list = data.list;
         }
 
-        patchState(store, {
+        patchState(writableStore, {
           loaded: true,
           list,
           totalCount: data.totalCount,
@@ -131,13 +182,13 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
       },
 
       clear() {
-        store.set(() => ({ ...initialState }));
+        patchState(writableStore, { ...initialState });
       },
 
       async select(id: string) {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: false,
-          selected: null,
+          selected: undefined,
           error: null,
         });
 
@@ -158,21 +209,21 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
       },
 
       unselect() {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: true,
-          selected: null,
+          selected: undefined,
           error: null,
         });
       },
 
       multiSelect(items: Array<T>) {
-        patchState(store, {
+        patchState(writableStore, {
           multiSelected: [...items],
         });
       },
 
       async update(item: Partial<T> & { id: string }) {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: false,
           error: null,
         });
@@ -191,7 +242,7 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
       },
 
       async updatePartial(item: Partial<T> & { id: string }) {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: false,
           error: null,
         });
@@ -210,7 +261,7 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
       },
 
       async updatePartialMany(items: Array<Partial<T> & { id: string }>) {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: false,
           error: null,
         });
@@ -228,7 +279,7 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
       },
 
       async delete(id: string) {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: false,
           error: null,
         });
@@ -246,7 +297,7 @@ export function CrudMethodsFactory<T extends IEntity<string>>() {
       },
 
       defaultFailure(error: string) {
-        patchState(store, {
+        patchState(writableStore, {
           loaded: true,
           error,
         });

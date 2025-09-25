@@ -102,7 +102,7 @@ export interface IDetailsOptions<T extends IEntity<string>> {
   title?: string;
   cellPipe?: ICellPipe<T>;
   type: any;
-  item: Signal<T>;
+  item: Signal<T | undefined>;
   loading?: Signal<boolean>;
   itemHandler?: ((id: string) => void) | null;
   removeHandler?: ((item: T) => void) | null;
@@ -200,7 +200,7 @@ export interface IListComponentFactories<T> {
 export interface IDetailsProvider<T> {
   getData: (id: string) => void;
   clearData: () => void;
-  item: Signal<T>;
+  item: Signal<T | undefined>;
   loading: Signal<boolean>;
 }
 

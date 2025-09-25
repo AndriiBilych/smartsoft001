@@ -1,14 +1,14 @@
-import { computed, Injectable, Signal } from '@angular/core';
+import { computed, inject, Injectable, Signal } from '@angular/core';
 
 import { IEntity } from '@smartsoft001/domain-core';
 
 import { CrudConfig } from '../crud.config';
 import { ICrudCreateManyOptions, ICrudFilter } from '../models';
-import { createCrudFeatureStore } from './crud.store';
+import { crudFeatureStoreFactory } from './crud.store';
 
 @Injectable()
 export class CrudFacade<T extends IEntity<string>> {
-  private store = createCrudFeatureStore<T>();
+  private store = inject(crudFeatureStoreFactory<T>());
 
   loaded: Signal<boolean> = this.store.getLoaded;
   loading: Signal<boolean> = computed(() => !this.store.getLoaded());

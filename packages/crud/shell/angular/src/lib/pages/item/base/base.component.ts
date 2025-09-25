@@ -29,7 +29,7 @@ export abstract class CrudItemPageBaseComponent<
 
   static smartType: DynamicComponentType = 'crud-item-page';
 
-  selected: Signal<T>;
+  selected: Signal<T | undefined>;
 
   contentTpl = viewChild<ViewContainerRef>('contentTpl');
 
