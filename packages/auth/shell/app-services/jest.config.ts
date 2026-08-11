@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'auth-shell-app-services',
   preset: '../../../../jest.preset.js',

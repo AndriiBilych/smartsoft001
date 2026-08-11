@@ -61,3 +61,4 @@ packages/**/cypress/downloads
 packages/**/cypress/screenshots
 packages/**/cypress/videos
 .playwright-mcp
+.nx/migrate-runs

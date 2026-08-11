@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'auth-shell-nestjs',
   preset: '../../../../jest.preset.js',
